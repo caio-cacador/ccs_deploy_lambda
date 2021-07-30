@@ -44,7 +44,7 @@ def _copy_files(src, dst):
         shutil.copy(file_, dst_file_path)
 
 
-def _print(str_, verbose):
+def _print(verbose, str_):
     if verbose:
         print(str_)
 
@@ -52,18 +52,21 @@ def _print(str_, verbose):
 def deploy(function_name: str, bucket_name: str, aws_session: Session, code_path: str = None, verbose: bool = True):
     if not code_path:
         code_path = os.path.dirname(os.path.abspath(__file__))
-
-    tmp_dir = tempfile.mkdtemp()
-    dst_zip_path = os.path.join(tempfile.gettempdir(), "%s.zip" % function_name)
+        print(code_path)
 
     _print(verbose, '+ Zipping files ...')
+    destiny_zip_path = os.path.join(tempfile.gettempdir(), "%s.zip" % function_name)
+    print('destiny_zip_path: ', destiny_zip_path)
+    tmp_dir = tempfile.mkdtemp()
     try:
         _copy_files(src=code_path, dst=tmp_dir)
-        if os.path.exists(dst_zip_path):
-            os.remove(dst_zip_path)
-        _zip_dir(tmp_dir, dst_zip_path)
+        if os.path.exists(destiny_zip_path):
+            os.remove(destiny_zip_path)
+        _zip_dir(tmp_dir, destiny_zip_path)
     except Exception as ex:
         print('Error while zipping files: {}'. format(ex))
+        from sys import exit
+        exit()
     finally:
         shutil.rmtree(tmp_dir)
     _print(verbose, '- Done!')
@@ -71,7 +74,7 @@ def deploy(function_name: str, bucket_name: str, aws_session: Session, code_path
     _print(verbose, "+ Sending zip to s3 ...")
     s3 = aws_session.resource('s3')
     s3_file_name = '%s.zip' % function_name
-    s3.Bucket(bucket_name).put_object(Key=s3_file_name, Body=open(dst_zip_path, 'rb'))
+    s3.Bucket(bucket_name).put_object(Key=s3_file_name, Body=open(destiny_zip_path, 'rb'))
     _print(verbose, '- Done!')
 
     _print(verbose, "+ Updating lambda code ...")
