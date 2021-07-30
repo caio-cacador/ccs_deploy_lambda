@@ -19,7 +19,7 @@ def _zip_dir(path, destiny_path):
 
 
 def _list_files(path, ignore_list=None, ignore_hidden=True):
-    if not ignore_hidden:
+    if not ignore_list:
         ignore_list = ["__pycache__", "pip"]
     ret = []
     for item in os.listdir(path):
@@ -52,11 +52,9 @@ def _print(verbose, str_):
 def deploy(function_name: str, bucket_name: str, aws_session: Session, code_path: str = None, verbose: bool = True):
     if not code_path:
         code_path = os.path.dirname(os.path.abspath(__file__))
-        print(code_path)
 
     _print(verbose, '+ Zipping files ...')
     destiny_zip_path = os.path.join(tempfile.gettempdir(), "%s.zip" % function_name)
-    print('destiny_zip_path: ', destiny_zip_path)
     tmp_dir = tempfile.mkdtemp()
     try:
         _copy_files(src=code_path, dst=tmp_dir)
