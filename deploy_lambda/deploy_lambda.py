@@ -55,9 +55,9 @@ def _copy_files(src: str, dst: str, ignore_list: List[str]):
 
 
 def _install_requirements(verbose: bool, req_path: str, tmp_dir: str):
-    _print(verbose, '-- Installing requirements ...')
+    _print(verbose, '+ Installing requirements ...')
     os.system(f'pip install -r {req_path} -t {tmp_dir}')
-    _print(verbose, '-- Installing requirements ...')
+    _print(verbose, '- Done!')
 
 
 def deploy(function_name: str, bucket_name: str, aws_session: Session, code_path: str = None, verbose: bool = True,
@@ -66,12 +66,13 @@ def deploy(function_name: str, bucket_name: str, aws_session: Session, code_path
         code_path = os.path.dirname(os.path.abspath(__file__))
     req_path = os.path.join(code_path, requirements)
 
-    _print(verbose, '+ Zipping files ...')
-    destiny_zip_path = os.path.join(tempfile.gettempdir(), "%s.zip" % function_name)
     tmp_dir = tempfile.mkdtemp()
+    destiny_zip_path = os.path.join(tempfile.gettempdir(), "%s.zip" % function_name)
     try:
-        _copy_files(src=code_path, dst=tmp_dir, ignore_list=ignore_list)
         _install_requirements(verbose=verbose, req_path=req_path, tmp_dir=tmp_dir)
+
+        _print(verbose, '+ Zipping files ...')
+        _copy_files(src=code_path, dst=tmp_dir, ignore_list=ignore_list)
         if os.path.exists(destiny_zip_path):
             os.remove(destiny_zip_path)
         _zip_dir(tmp_dir, destiny_zip_path)
