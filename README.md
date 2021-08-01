@@ -9,5 +9,9 @@ Example using a specific version:\
 
 ## Changes
 
+### 1.1.0
+`Added method to install requirements`
+
 ### 1.0.0
 `Added deploy base methods`
+

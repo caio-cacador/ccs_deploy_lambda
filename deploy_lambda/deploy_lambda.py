@@ -7,6 +7,11 @@ import tempfile
 import zipfile
 
 
+def _print(verbose, str_):
+    if verbose:
+        print(str_)
+
+
 def _zip_dir(path, destiny_path):
     zipped_file = zipfile.ZipFile(destiny_path, 'w')
     for root, _, files in os.walk(path):
@@ -21,8 +26,11 @@ def _zip_dir(path, destiny_path):
 
 
 def _list_files(path, ignore_list=None, ignore_hidden=True):
+    ignore_list_default = {'__pycache__', 'pip', 'requirements_dev.txt', 'README.md'}
     if not ignore_list:
-        ignore_list = ["__pycache__", "pip"]
+        ignore_list = set()
+
+    ignore_list = ignore_list_default.union(set(ignore_list))
     available_files = []
     for item in os.listdir(path):
         if ignore_hidden and item.startswith("."):
@@ -46,21 +54,24 @@ def _copy_files(src: str, dst: str, ignore_list: List[str]):
         shutil.copy(file_, dst_file_path)
 
 
-def _print(verbose, str_):
-    if verbose:
-        print(str_)
+def _install_requirements(verbose: bool, req_path: str, tmp_dir: str):
+    _print(verbose, '-- Installing requirements ...')
+    os.system(f'pip install -r {req_path} -t {tmp_dir}')
+    _print(verbose, '-- Installing requirements ...')
 
 
 def deploy(function_name: str, bucket_name: str, aws_session: Session, code_path: str = None, verbose: bool = True,
-           ignore_list=None):
+           ignore_list=None, requirements: str = 'requirements.txt'):
     if not code_path:
         code_path = os.path.dirname(os.path.abspath(__file__))
+    req_path = os.path.join(code_path, requirements)
 
     _print(verbose, '+ Zipping files ...')
     destiny_zip_path = os.path.join(tempfile.gettempdir(), "%s.zip" % function_name)
     tmp_dir = tempfile.mkdtemp()
     try:
         _copy_files(src=code_path, dst=tmp_dir, ignore_list=ignore_list)
+        _install_requirements(verbose=verbose, req_path=req_path, tmp_dir=tmp_dir)
         if os.path.exists(destiny_zip_path):
             os.remove(destiny_zip_path)
         _zip_dir(tmp_dir, destiny_zip_path)
